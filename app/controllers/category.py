@@ -9,3 +9,25 @@ def create_category(data):
     db.session.add(category)
     db.session.commit()
     return category
+
+def get_all_categories():
+    return Category.query.all()
+
+def get_category_by_id(id):
+    return Category.query.get(id)
+
+def update_category(id, data):
+    category = Category.query.get(id)
+    if category:
+        category.name = data.get("name")
+        db.session.commit()
+        return category
+    return None
+
+def delete_category(id):
+    category = Category.query.get(id)
+    if category:
+        db.session.delete(category)
+        db.session.commit()
+        return category
+    return None
