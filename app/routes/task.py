@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task
+from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task, get_existing_task
 
 task_bp = Blueprint("tasks", __name__)
 
@@ -78,6 +78,26 @@ def generate():
     task_data["category_name"] = data.get("category", "")
 
     task = generate_task(task_data)
+    return jsonify({
+        "id": task.id,
+        "description": task.description,
+        "category": task.category.name,
+    }), 200
+
+@task_bp.route("/get_task", methods=["POST"])
+def get_task():
+    data = request.get_json()
+
+    required_fields = ["telegram_id"]
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+    
+    task_data = {}
+    task_data["telegram_id"] = data.get("telegram_id")
+    task_data["category_name"] = data.get("category", "")
+
+    task = get_existing_task(task_data)
     return jsonify({
         "id": task.id,
         "description": task.description,

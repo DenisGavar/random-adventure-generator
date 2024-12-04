@@ -112,3 +112,28 @@ def assign_task_to_user(task, user):
     db.session.add(user_task)
     db.session.commit()
     return user_task
+
+def get_existing_task(data):
+    telegram_id = data.get("telegram_id")
+    category_name = data.get("category_name")
+
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    if not user:
+        raise ValueError(f"User not found")   
+
+    if not category_name:
+        category = Category.query.order_by(func.random()).first()
+    else:
+        category = Category.query.filter_by(name=category_name).first()
+    
+    if not category:
+        raise ValueError("Category not found")
+
+    task = Task.query.filter_by(category_id=category.id).order_by(func.random()).first()
+    if not task:
+        raise ValueError("Task not found")
+
+    assign_task_to_user(task, user)
+
+    return task
+    
