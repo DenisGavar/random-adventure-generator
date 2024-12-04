@@ -64,14 +64,20 @@ def delete(id):
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"message": "Task deleted successfully"}), 204
 
-@task_bp.route("/generate", methods=["GET"])
+@task_bp.route("/generate", methods=["POST"])
 def generate():
-    category_name = request.args.get("category", "").strip()
+    data = request.get_json()
 
-    data = {}
-    data["category_name"] = category_name
+    required_fields = ["telegram_id"]
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+    
+    task_data = {}
+    task_data["telegram_id"] = data.get("telegram_id")
+    task_data["category_name"] = data.get("category", "")
 
-    task = generate_task(data)
+    task = generate_task(task_data)
     return jsonify({
         "id": task.id,
         "description": task.description,

@@ -4,6 +4,8 @@ from openai import OpenAIError
 
 from app.models.task import Task
 from app.models.category import Category
+from app.models.user import User
+from app.models.user_task import UserTask
 from app.common.db import db
 from app.common.openai import openai_client
 
@@ -54,7 +56,12 @@ def delete_task(id):
     return None
 
 def generate_task(data):
+    telegram_id = data.get("telegram_id")
     category_name = data.get("category_name")
+
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    if not user:
+        raise ValueError(f"User not found")   
 
     if not category_name:
         category = Category.query.order_by(func.random()).first()
@@ -89,8 +96,19 @@ def generate_task(data):
             "description": description,
             "category_name": category_name,
         })
+
+        assign_task_to_user(task, user)
+
         return task
     
     except OpenAIError as e:
         raise ValueError(f"Failed to generate task: {str(e)}")
 
+def assign_task_to_user(task, user):
+    user_task = UserTask(
+        user_id = user.id,
+        task_id = task.id,
+    )
+    db.session.add(user_task)
+    db.session.commit()
+    return user_task
