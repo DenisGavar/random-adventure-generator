@@ -84,7 +84,7 @@ def generate():
         "category": task.category.name,
     }), 200
 
-@task_bp.route("/get_task", methods=["POST"])
+@task_bp.route("/get", methods=["POST"])
 def get_task():
     data = request.get_json()
 
