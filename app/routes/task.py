@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task
+from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task
 
 task_bp = Blueprint("tasks", __name__)
 
@@ -63,3 +63,17 @@ def delete(id):
     if not task:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"message": "Task deleted successfully"}), 204
+
+@task_bp.route("/generate", methods=["GET"])
+def generate():
+    category_name = request.args.get("category", "").strip()
+
+    data = {}
+    data["category_name"] = category_name
+
+    task = generate_task(data)
+    return jsonify({
+        "id": task.id,
+        "description": task.description,
+        "category": task.category.name,
+    }), 200
