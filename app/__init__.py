@@ -1,8 +1,11 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_talisman import Talisman
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.db import db, migrate
+from app.common.middleware import handle_unexpected_error
+from app.common.exceptions import CustomAPIException
 from .config import config
 from app.routes.category import category_bp
 from app.routes.task import task_bp
@@ -21,5 +24,17 @@ def create_app(config_mode):
     app.register_blueprint(category_bp, url_prefix="/categories")
     app.register_blueprint(task_bp, url_prefix="/tasks")
     app.register_blueprint(user_bp, url_prefix="/users")
+
+    @app.errorhandler(CustomAPIException)
+    def handle_custom_api_exception(e):
+        return jsonify(e.to_dict()), e.status_code
+
+    # Error handler for 404 - Route Not Found
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return jsonify({"error": "Route not found"}), 404
+
+    # Middleware for Unexpected Errors
+    handle_unexpected_error(app)
 
     return app

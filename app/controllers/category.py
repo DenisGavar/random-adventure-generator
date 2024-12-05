@@ -1,33 +1,88 @@
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.models.category import Category
 from app.common.db import db
+from app.common.exceptions import DatabaseError, NotFoundError, ValidationError
 
 def create_category(data):
-    name = data.get("name")
-    category = Category(
-        name = name,
-    )
-    db.session.add(category)
-    db.session.commit()
-    return category
+    try:
+        name = data.get("name")
+        category = Category(
+            name = name,
+        )
+        db.session.add(category)
+        db.session.commit()
+        result = {
+            "id": category.id,
+            "name": category.name,
+        }
+        return result
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error occurred: {str(e)}")
 
 def get_all_categories():
-    return Category.query.all()
+    try:
+        categories = Category.query.all()
+        result = [{"id": category.id, "name": category.name} for category in categories]
+        return result
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error occurred: {str(e)}")
 
 def get_category_by_id(id):
-    return Category.query.get(id)
+    try:
+        category = Category.query.get(id)
+        if not category:
+            raise NotFoundError("Category not found.")
+        
+        result = {
+            "id": category.id,
+            "name": category.name
+        }
+        return result
+    except NotFoundError as e:
+        raise NotFoundError(f"{str(e)}")
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error occurred: {str(e)}")
 
 def update_category(id, data):
-    category = Category.query.get(id)
-    if category:
-        category.name = data.get("name")
+    try:
+        category = Category.query.get(id)
+        if not category:
+            raise NotFoundError("Category not found.")
+        
+        if "name" in data:
+            category.name = data.get("name")
+
         db.session.commit()
-        return category
-    return None
+        result = {
+            "id": category.id,
+            "name": category.name,
+        }        
+        return result
+    except NotFoundError as e:
+        raise NotFoundError(f"{str(e)}")
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error occurred: {str(e)}")
 
 def delete_category(id):
-    category = Category.query.get(id)
-    if category:
+    try:
+        category = Category.query.get(id)
+        if not category:
+            raise NotFoundError("Category not found.")
+        
         db.session.delete(category)
         db.session.commit()
-        return category
-    return None
+    except NotFoundError as e:
+        raise NotFoundError(f"{str(e)}")
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error occurred: {str(e)}")
