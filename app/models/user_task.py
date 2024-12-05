@@ -5,7 +5,7 @@ class UserTask(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     task_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
-    status = db.Column(db.String(20), nullable=False, default="assigned")
+    status = db.Column(db.Enum("assigned", "completed", name="task_status"), nullable=False, default="assigned") # assigned | completed
     completed_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())

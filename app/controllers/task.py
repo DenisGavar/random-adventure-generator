@@ -1,6 +1,7 @@
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
 from openai import OpenAIError
+from datetime import datetime
 
 from app.models.task import Task
 from app.models.category import Category
@@ -137,3 +138,20 @@ def get_existing_task(data):
 
     return task
     
+def complete_task(id, request_data):
+    telegram_id = request_data.get("telegram_id")
+
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+
+    if not user:
+        return None, "User not found"
+    
+    user_task = UserTask.query.filter_by(task_id=id, user_id=user.id).first()
+    if not user_task:
+        return None, "User task not found"
+    
+    user_task.status = "completed"
+    user_task.completed_at = datetime.now()
+    db.session.commit()
+    
+    return user_task, None

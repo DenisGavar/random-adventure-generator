@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task, get_existing_task
+from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task, get_existing_task, complete_task
 
 task_bp = Blueprint("tasks", __name__)
 
@@ -103,3 +103,22 @@ def get_task():
         "description": task.description,
         "category": task.category.name,
     }), 200
+
+@task_bp.route("/<int:id>/complete", methods=["POST"])
+def complete_task_route(id):
+    data = request.get_json()
+    telegram_id = data.get("telegram_id")
+    if not telegram_id:
+        return jsonify({"error": "User telegram id is required"}), 400
+
+    request_data = {}
+    request_data["telegram_id"] = telegram_id
+
+    task, error = complete_task(id, request_data)
+
+    if error:
+        return jsonify({"error": error}), 404
+
+    task_data = task.__dict__
+    task_data.pop('_sa_instance_state', None)
+    return jsonify(task_data), 200
