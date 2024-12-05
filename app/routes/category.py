@@ -56,5 +56,5 @@ def update_category_route(id):
 
 @category_bp.route("/<int:id>", methods=["DELETE"])
 def delete_category_route(id):
-    delete_category(id)
-    return jsonify({"message": "Category deleted successfully"}), 204
+    result = delete_category(id)
+    return jsonify(result), 204

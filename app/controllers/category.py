@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.category import Category
 from app.common.db import db
-from app.common.exceptions import DatabaseError, NotFoundError, ValidationError
+from app.common.exceptions import DatabaseError, NotFoundError
 
 def create_category(data):
     try:
@@ -80,6 +80,8 @@ def delete_category(id):
         
         db.session.delete(category)
         db.session.commit()
+        result = {"message": "Category deleted successfully"}
+        return result
     except NotFoundError as e:
         raise NotFoundError(f"{str(e)}")
     except SQLAlchemyError as e:
