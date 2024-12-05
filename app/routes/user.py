@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.controllers.user import create_user, get_all_users, get_user_by_id, update_user, delete_user
+from app.controllers.user import create_user, get_all_users, get_user_by_id, update_user, delete_user, get_user_tasks
 
 user_bp = Blueprint("users", __name__)
 
@@ -81,3 +81,18 @@ def delete(id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"message": "User deleted successfully"}), 204
+
+@user_bp.route("/<int:telegram_id>/tasks", methods=["GET"])
+def get_user_tasks_route(telegram_id):
+    status = request.args.get("status", "")
+
+    request_data = {}
+    request_data["telegram_id"] = telegram_id
+    request_data["status"] = status
+
+    user_tasks, error = get_user_tasks(request_data)
+
+    if error:
+        return jsonify({"error": error}), 404
+
+    return jsonify(user_tasks), 200

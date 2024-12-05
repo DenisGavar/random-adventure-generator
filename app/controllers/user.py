@@ -1,4 +1,7 @@
 from app.models.user import User
+from app.models.task import Task
+from app.models.user_task import UserTask
+from app.models.category import Category
 from app.common.db import db
 
 def create_user(data):
@@ -51,3 +54,40 @@ def delete_user(id):
         db.session.commit()
         return user
     return None
+
+def get_user_tasks(request_data):
+    telegram_id = request_data.get("telegram_id")
+    status = request_data.get("status")
+
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+
+    if not user:
+        return None, "User not found"
+
+    user_tasks_query = (
+        db.session.query(Task, UserTask, Category)
+        .join(UserTask, Task.id == UserTask.task_id)
+        .join(Category, Task.category_id == Category.id)
+        .filter(UserTask.user_id == user.id)
+    )
+
+    if status:
+        user_tasks_query = user_tasks_query.filter(UserTask.status == status)
+
+    user_tasks = user_tasks_query.all()
+
+    # Format the results
+    tasks_data = [
+        {
+            "id": task.id,
+            "description": task.description,
+            "category_id": task.category_id,
+            "category_name": category.name,
+            "status": user_task.status,
+            "assigned_at": user_task.created_at,
+            "completed_at": user_task.completed_at,
+        }
+        for task, user_task, category in user_tasks
+    ]
+
+    return tasks_data, None
