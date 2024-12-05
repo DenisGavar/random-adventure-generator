@@ -24,3 +24,7 @@ class NotFoundError(CustomAPIException):
 class ValidationError(CustomAPIException):
     """Exception for validation errors."""
     status_code = 400
+
+class AIGenerationError(CustomAPIException):
+    """Exception for AI generation."""
+    status_code = 500

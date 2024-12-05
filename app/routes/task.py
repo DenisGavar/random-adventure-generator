@@ -1,124 +1,121 @@
 from flask import Blueprint, jsonify, request
-from app.controllers.task import create_task, get_all_tasks, get_task_by_id, update_task, delete_task, generate_task, get_existing_task, complete_task
+
+from app.common.exceptions import ValidationError
+from app.controllers.task import (
+    create_task,
+    get_all_tasks,
+    get_task_by_id,
+    update_task,
+    delete_task,
+    generate_task,
+    assign_existing_task,
+    complete_task
+)
 
 task_bp = Blueprint("tasks", __name__)
 
 @task_bp.route("/", methods=["POST"])
-def create():
+def create_task_route():
     data = request.get_json()
-    description = data.get("description")
-    if not description:
-        return jsonify({"error": "Description is required"}), 400
-    category_name = data.get("category")
-    if not category_name:
-        return jsonify({"error": "Category name is required"}), 400
 
-    task = create_task({
-        "description": description,
-        "category_name": category_name,
-    })
-    return jsonify({"id": task.id, "description": task.description}), 201
+    if not data or not isinstance(data, dict):
+        raise ValidationError("Invalid request body. Expected a JSON object.")
+
+    required_fields = ['description', 'category']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
+    
+    request_data = {}
+    request_data["description"] = data.get("description")
+    request_data["category_name"] = data.get("category")
+
+    result = create_task(request_data)
+    return jsonify(result), 201
 
 @task_bp.route("/", methods=["GET"])
-def get_all():
-    tasks = get_all_tasks()
-    return jsonify([{
-        "id": task.id,
-        "description": task.description,
-        "category": task.category.name,
-    } for task in tasks]), 200
+def get_all_tasks_route():
+    result = get_all_tasks()
+    return jsonify(result), 200
 
 @task_bp.route("/<int:id>", methods=["GET"])
-def get_by_id(id):
-    task = get_task_by_id(id)
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-    return jsonify({
-        "id": task.id,
-        "description": task.description,
-        "category": task.category.name,
-    }), 200
+def get_task_by_id_route(id):
+    result = get_task_by_id(id)
+    return jsonify(result), 200
 
 @task_bp.route("/<int:id>", methods=["PUT"])
-def update(id):
+def update_task_route(id):
     data = request.get_json()
-    description = data.get("description")
-    if not description:
-        return jsonify({"error": "Description is required"}), 400
-    category_name = data.get("category")
-    if not category_name:
-        return jsonify({"error": "Category name is required"}), 400
-        
-    task = update_task(id, {
-        "description": description,
-        "category_name": category_name,
-    })
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-    return jsonify({"id": task.id, "description": task.description}), 200
+
+    if not data or not isinstance(data, dict):
+        raise ValidationError("Invalid request body. Expected a JSON object.")
+
+    request_data = {}
+    if "description" in data:
+        request_data["description"] = data.get("description")
+    if "category" in data:
+        request_data["category_name"] = data.get("category")
+
+    result = update_task(id, request_data)
+    return jsonify(result), 200
 
 @task_bp.route("/<int:id>", methods=["DELETE"])
-def delete(id):
-    task = delete_task(id)
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-    return jsonify({"message": "Task deleted successfully"}), 204
+def delete_task_route(id):
+    result = delete_task(id)
+    return jsonify(result), 204
 
 @task_bp.route("/generate", methods=["POST"])
-def generate():
+def generate_task_route():
     data = request.get_json()
+
+    if not data or not isinstance(data, dict):
+        raise ValidationError("Invalid request body. Expected a JSON object.")
 
     required_fields = ["telegram_id"]
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
-        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+        raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
     
-    task_data = {}
-    task_data["telegram_id"] = data.get("telegram_id")
-    task_data["category_name"] = data.get("category", "")
+    request_data = {}
+    request_data["telegram_id"] = data.get("telegram_id")
+    request_data["category_name"] = data.get("category", "")
 
-    task = generate_task(task_data)
-    return jsonify({
-        "id": task.id,
-        "description": task.description,
-        "category": task.category.name,
-    }), 200
+    result = generate_task(request_data)
+    return jsonify(result), 200
 
 @task_bp.route("/get", methods=["POST"])
-def get_task():
+def assign_existing_task_route():
     data = request.get_json()
+
+    if not data or not isinstance(data, dict):
+        raise ValidationError("Invalid request body. Expected a JSON object.")
 
     required_fields = ["telegram_id"]
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
-        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+        raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
     
-    task_data = {}
-    task_data["telegram_id"] = data.get("telegram_id")
-    task_data["category_name"] = data.get("category", "")
+    request_data = {}
+    request_data["telegram_id"] = data.get("telegram_id")
+    request_data["category_name"] = data.get("category", "")
 
-    task = get_existing_task(task_data)
-    return jsonify({
-        "id": task.id,
-        "description": task.description,
-        "category": task.category.name,
-    }), 200
+    result = assign_existing_task(request_data)
+    return jsonify(result), 200
 
 @task_bp.route("/<int:id>/complete", methods=["POST"])
 def complete_task_route(id):
     data = request.get_json()
-    telegram_id = data.get("telegram_id")
-    if not telegram_id:
-        return jsonify({"error": "User telegram id is required"}), 400
+
+    if not data or not isinstance(data, dict):
+        raise ValidationError("Invalid request body. Expected a JSON object.")
+
+    required_fields = ["telegram_id"]
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
 
     request_data = {}
-    request_data["telegram_id"] = telegram_id
+    request_data["telegram_id"] = data.get("telegram_id")
 
-    task, error = complete_task(id, request_data)
-
-    if error:
-        return jsonify({"error": error}), 404
-
-    task_data = task.__dict__
-    task_data.pop('_sa_instance_state', None)
-    return jsonify(task_data), 200
+    result = complete_task(id, request_data)
+    return jsonify(result), 200

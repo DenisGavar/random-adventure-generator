@@ -145,6 +145,7 @@ def get_user_tasks(request_data):
 
         result = [
             {
+                "task_id": task.id,
                 "description": task.description,
                 "category_name": category.name,
                 "status": user_task.status,
