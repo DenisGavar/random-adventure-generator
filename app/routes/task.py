@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 
+from app.common.limiter import limiter
 from app.common.exceptions import ValidationError
 from app.controllers.task import (
     create_task,
@@ -64,7 +65,14 @@ def delete_task_route(id):
     result = delete_task(id)
     return jsonify(result), 204
 
+def telegram_id_key():
+    data = request.get_json()
+    telegram_id = str(data.get("telegram_id", "anonymous"))
+    return telegram_id
+
 @task_bp.route("/generate", methods=["POST"])
+@limiter.limit("3 per minute", key_func=telegram_id_key)
+@limiter.limit("5 per hour", key_func=telegram_id_key)
 def generate_task_route():
     data = request.get_json()
 

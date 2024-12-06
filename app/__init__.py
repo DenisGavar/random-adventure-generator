@@ -1,9 +1,10 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_talisman import Talisman
-from sqlalchemy.exc import SQLAlchemyError
+from flask_limiter import RateLimitExceeded
 
 from app.common.db import db, migrate
+from app.common.limiter import limiter
 from app.common.middleware import handle_unexpected_error
 from app.common.exceptions import CustomAPIException
 from .config import config
@@ -18,6 +19,8 @@ def create_app(config_mode):
     CORS(app)
     Talisman(app)
 
+    limiter.init_app(app)
+
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -28,6 +31,15 @@ def create_app(config_mode):
     @app.errorhandler(CustomAPIException)
     def handle_custom_api_exception(e):
         return jsonify(e.to_dict()), e.status_code
+
+    @app.errorhandler(RateLimitExceeded)
+    def rate_limit_exceeded(e):
+        result = {
+            "error": "Rate limit exceeded",
+            "message": "You have hit the rate limit. Please try again later.",
+            "limit": str(e.limit.limit),
+        }
+        return jsonify(result), 429
 
     # Error handler for 404 - Route Not Found
     @app.errorhandler(404)
