@@ -12,10 +12,13 @@ from app.common.db import db
 from app.common.openai import openai_client
 from app.common.exceptions import DatabaseError, NotFoundError, AIGenerationError
 
-CONTENT = """Generate a random, short task that is 10-15 words long.
+CONTENT = """You are a task generator. Generate a random, short task that is 10-15 words long.
+Your tasks should be clear, concise, and meaningful.
+Each task should be related to the category provided.
 Example: 'Write a letter to your future self',
 'Cook a dish with only ingredients you already have at home' or
-'Take a photo of something blue and share it'."""
+'Take a photo of something blue and share it'.
+"""
 
 def create_task(data):
     try:
@@ -165,7 +168,7 @@ def generate_task(data):
         chat_completion = openai_client.chat.completions.create(
             messages = messages,
             model = "gpt-4o-mini",
-            temperature=2,
+            temperature=1,
             max_tokens=50,
         )   
         description = chat_completion.choices[0].message.content.strip()
