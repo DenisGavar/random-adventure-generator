@@ -249,8 +249,8 @@ def telegram_id_key():
     return telegram_id
 
 @task_bp.route("/generate", methods=["POST"])
-@limiter.limit("30 per minute", key_func=telegram_id_key)
-@limiter.limit("50 per hour", key_func=telegram_id_key)
+@limiter.limit("3 per minute", key_func=telegram_id_key)
+@limiter.limit("5 per hour", key_func=telegram_id_key)
 def generate_task_route():
     """
     Generate a new task
