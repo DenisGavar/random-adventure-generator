@@ -21,10 +21,10 @@ def configure_swagger(app):
         "static_url_path": "/flasgger_static",
         "swagger_ui": True,
         "specs_route": "/apidocs/",
+        "openapi": "3.0.1",
     }
 
     swagger_template = {
-        "swagger": "2.0",
         "info": {
             "title": "Random Adventure Generator API",
             "description": "API documentation for Random Adventure Generator",
