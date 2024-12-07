@@ -7,6 +7,7 @@ from app.common.db import db, migrate
 from app.common.limiter import limiter
 from app.common.middleware import handle_unexpected_error
 from app.common.exceptions import CustomAPIException
+from app.common.swagger import configure_swagger
 from .config import config
 from app.routes.category import category_bp
 from app.routes.task import task_bp
@@ -17,12 +18,22 @@ def create_app(config_mode):
     app.config.from_object(config[config_mode])
     
     CORS(app)
-    Talisman(app)
+
+    csp = {
+        "default-src": ["'self'", "data:"],
+        "script-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        "img-src": ["'self'", "data:"],
+    }
+    Talisman(app, content_security_policy=csp)
+
 
     limiter.init_app(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
+
+    configure_swagger(app)
 
     app.register_blueprint(category_bp, url_prefix="/categories")
     app.register_blueprint(task_bp, url_prefix="/tasks")
