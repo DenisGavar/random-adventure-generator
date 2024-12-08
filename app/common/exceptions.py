@@ -28,3 +28,7 @@ class ValidationError(CustomAPIException):
 class AIGenerationError(CustomAPIException):
     """Exception for AI generation."""
     status_code = 500
+
+class AlreadyExistsError(CustomAPIException):
+    """Exception for entity already exists."""
+    status_code = 409

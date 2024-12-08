@@ -5,14 +5,19 @@ from app.models.task import Task
 from app.models.user_task import UserTask
 from app.models.category import Category
 from app.common.db import db
-from app.common.exceptions import DatabaseError, NotFoundError
+from app.common.exceptions import DatabaseError, NotFoundError, AlreadyExistsError
 
 def create_user(data):
-    try:
+    try:    
         telegram_id = data.get("telegram_id")
         username = data.get("username")
         first_name = data.get("first_name")
         last_name = data.get("last_name")
+
+        user = User.query.filter_by(telegram_id=telegram_id).first()
+        if user:
+            raise AlreadyExistsError("User already exists.")
+
         user = User(
             telegram_id = telegram_id,
             username = username,
@@ -29,6 +34,8 @@ def create_user(data):
             "last_name": user.last_name,
         }
         return result
+    except AlreadyExistsError as e:
+        raise AlreadyExistsError(f"{str(e)}")
     except SQLAlchemyError as e:
         raise DatabaseError(f"Database error: {str(e)}")
     except Exception as e:
