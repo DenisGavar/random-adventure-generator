@@ -68,3 +68,5 @@ Follow the steps below to set up and run the project locally:
     ```bash
     python run.py
     ```
+
+**[Try it on render](https://random-adventure-generator.onrender.com)**
